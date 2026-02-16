@@ -1,0 +1,422 @@
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head, useForm, usePage, Link } from '@inertiajs/react';
+import InputLabel from '@/Components/InputLabel';
+import TextInput from '@/Components/TextInput';
+import SelectInput from '@/Components/SelectInput';
+import PrimaryButton from '@/Components/PrimaryButton';
+import SecondaryButton from '@/Components/SecondaryButton';
+import InputError from '@/Components/InputError';
+import Modal from '@/Components/Modal';
+import { __ } from '@/Utils/lang';
+import { useState } from 'react';
+
+export default function RmdProfile({ auth, rmdProfile, graduationPlanDate }) {
+    const user = auth.user;
+    const { flash } = usePage().props;
+    const [isEditing, setIsEditing] = useState(false);
+    const [modalState, setModalState] = useState({
+        show: false,
+        type: 'success', // 'success' or 'error'
+        title: '',
+        message: ''
+    });
+
+    const { data, setData, post, processing, errors, reset } = useForm({
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        email: user.email || '',
+        phone_number: user.phone_number || '',
+        address: user.address || '',
+        date_of_birth: user.date_of_birth || '',
+        gender: user.gender || '',
+        profile_photo: null,
+        first_filled_at: rmdProfile?.first_filled_at || new Date().toISOString().split('T')[0],
+        first_filled_age: rmdProfile?.first_filled_age || user.age || '',
+        first_filled_education: rmdProfile?.first_filled_education || user.education || '',
+    });
+
+    const [photoPreview, setPhotoPreview] = useState(user.profile_photo_url);
+
+    const handlePhotoChange = (e) => {
+        const file = e.target.files[0];
+        setData('profile_photo', file);
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPhotoPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const submit = (e) => {
+        e.preventDefault();
+        
+        // Remove browser confirmation
+        // if (!confirm(__('Apakah Anda yakin ingin menyimpan perubahan profil ini?'))) {
+        //     return;
+        // }
+
+        post(route('rmd.profile.store'), {
+            forceFormData: true,
+            onSuccess: () => {
+                setIsEditing(false);
+                setModalState({
+                    show: true,
+                    type: 'success',
+                    title: __('Berhasil!'),
+                    message: __('Data profil Anda telah berhasil disimpan.')
+                });
+            },
+            onError: (errors) => {
+                setModalState({
+                    show: true,
+                    type: 'error',
+                    title: __('Gagal!'),
+                    message: __('Terjadi kesalahan saat menyimpan data. Silakan periksa kembali inputan Anda.')
+                });
+            }
+        });
+    };
+
+    const closeModal = () => {
+        setModalState(prev => ({ ...prev, show: false }));
+    };
+
+    const cancelEdit = () => {
+        reset();
+        setPhotoPreview(user.profile_photo_url);
+        setIsEditing(false);
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return '-';
+        return new Date(dateString).toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+    };
+
+    // Calculate graduation plan date dynamically based on DOB input
+    const dynamicGraduationDate = data.date_of_birth 
+        ? new Date(new Date(data.date_of_birth).setFullYear(new Date(data.date_of_birth).getFullYear() + 21)) 
+        : (graduationPlanDate ? new Date(graduationPlanDate) : null);
+
+    const InfoRow = ({ label, value }) => (
+        <div className="py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+            <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">{label}</dt>
+            <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 font-semibold">{value || '-'}</dd>
+        </div>
+    );
+
+    return (
+        <AuthenticatedLayout
+            user={user}
+            header={<h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">{__('Profil Pribadiku')}</h2>}
+        >
+            <Head title="Profil Pribadiku" />
+
+            <div className="py-12">
+                <div className="max-w-3xl mx-auto sm:px-6 lg:px-8">
+                    {/* Flash Message removed here as it will be shown in modal */}
+                    
+                    <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                        <div className="p-6 text-gray-900 dark:text-gray-100">
+                            
+                            <div className="flex justify-between items-start mb-6">
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{__('PROFIL PRIBADIKU')}</h3>
+                                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 max-w-xl">
+                                        {__('Isilah profil pribadi ini sesuai dengan keadaanmu yang sesungguhnya.')}
+                                    </p>
+                                </div>
+                                {!isEditing && (
+                                    <PrimaryButton onClick={() => setIsEditing(true)}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                        </svg>
+                                        {__('Edit Profil')}
+                                    </PrimaryButton>
+                                )}
+                            </div>
+
+                            {isEditing ? (
+                                <form onSubmit={submit} className="space-y-6 animate-fade-in-up">
+                                    {/* Edit Mode */}
+                                    
+                                    {/* Profile Photo */}
+                                    <div className="flex flex-col items-center mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                        <div className="relative w-32 h-32 mb-4 group">
+                                            <img 
+                                                src={photoPreview || 'https://ui-avatars.com/api/?name=' + user.name} 
+                                                alt="Profile" 
+                                                className="w-full h-full rounded-full object-cover border-4 border-white dark:border-gray-600 shadow-lg"
+                                            />
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <label htmlFor="profile_photo" className="cursor-pointer text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium text-sm">
+                                            {__('Klik untuk mengubah foto')}
+                                        </label>
+                                        <input
+                                            type="file"
+                                            id="profile_photo"
+                                            onChange={handlePhotoChange}
+                                            className="hidden"
+                                            accept="image/*"
+                                        />
+                                        <InputError message={errors.profile_photo} className="mt-2" />
+                                    </div>
+
+                                    {/* Personal Data Form */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <InputLabel htmlFor="first_name" value={__('Nama Depan')} />
+                                            <TextInput
+                                                id="first_name"
+                                                value={data.first_name}
+                                                onChange={(e) => setData('first_name', e.target.value)}
+                                                className="mt-1 block w-full"
+                                                required
+                                            />
+                                            <InputError message={errors.first_name} className="mt-2" />
+                                        </div>
+                                        <div>
+                                            <InputLabel htmlFor="last_name" value={__('Nama Belakang')} />
+                                            <TextInput
+                                                id="last_name"
+                                                value={data.last_name}
+                                                onChange={(e) => setData('last_name', e.target.value)}
+                                                className="mt-1 block w-full"
+                                            />
+                                            <InputError message={errors.last_name} className="mt-2" />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <InputLabel htmlFor="email" value={__('Email')} />
+                                        <TextInput
+                                            id="email"
+                                            type="email"
+                                            value={data.email}
+                                            className="mt-1 block w-full bg-gray-100 cursor-not-allowed"
+                                            readOnly
+                                            disabled
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">{__('Email tidak dapat diubah.')}</p>
+                                    </div>
+
+                                    <div>
+                                        <InputLabel htmlFor="phone_number" value={__('Nomor Telepon')} />
+                                        <TextInput
+                                            id="phone_number"
+                                            value={data.phone_number}
+                                            onChange={(e) => setData('phone_number', e.target.value)}
+                                            className="mt-1 block w-full"
+                                        />
+                                        <InputError message={errors.phone_number} className="mt-2" />
+                                    </div>
+
+                                    <div>
+                                        <InputLabel htmlFor="address" value={__('Alamat')} />
+                                        <TextInput
+                                            id="address"
+                                            value={data.address}
+                                            onChange={(e) => setData('address', e.target.value)}
+                                            className="mt-1 block w-full"
+                                        />
+                                        <InputError message={errors.address} className="mt-2" />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <InputLabel htmlFor="date_of_birth" value={__('Tanggal Lahir')} />
+                                            <TextInput
+                                                id="date_of_birth"
+                                                type="date"
+                                                value={data.date_of_birth}
+                                                onChange={(e) => setData('date_of_birth', e.target.value)}
+                                                className="mt-1 block w-full"
+                                            />
+                                            <InputError message={errors.date_of_birth} className="mt-2" />
+                                        </div>
+                                        <div>
+                                            <InputLabel htmlFor="gender" value={__('Jenis Kelamin')} />
+                                            <SelectInput
+                                                id="gender"
+                                                value={data.gender}
+                                                onChange={(e) => setData('gender', e.target.value)}
+                                                className="mt-1 block w-full"
+                                            >
+                                                <option value="">{__('Pilih Jenis Kelamin')}</option>
+                                                <option value="Male">{__('Laki-laki')}</option>
+                                                <option value="Female">{__('Perempuan')}</option>
+                                            </SelectInput>
+                                            <InputError message={errors.gender} className="mt-2" />
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-md border border-blue-100 dark:border-blue-800">
+                                        <InputLabel value={__('Tanggal Rencana Kelulusan PPA (21 Tahun)')} className="text-blue-800 dark:text-blue-300" />
+                                        <div className="mt-1 text-lg font-bold text-blue-900 dark:text-blue-200">
+                                            {dynamicGraduationDate ? formatDate(dynamicGraduationDate.toISOString()) : '-'}
+                                        </div>
+                                        <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                                            {__('*Otomatis dihitung berdasarkan tanggal lahir + 21 tahun')}
+                                        </p>
+                                    </div>
+
+                                    <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                                        <h4 className="font-semibold mb-4 text-lg text-gray-800 dark:text-gray-200">{__('Data Pengisian Awal')}</h4>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div>
+                                                <InputLabel htmlFor="first_filled_at" value={__('Tanggal Pengisian')} />
+                                                <TextInput
+                                                    id="first_filled_at"
+                                                    type="date"
+                                                    value={data.first_filled_at}
+                                                    onChange={(e) => setData('first_filled_at', e.target.value)}
+                                                    className="mt-1 block w-full"
+                                                />
+                                                <InputError message={errors.first_filled_at} className="mt-2" />
+                                            </div>
+                                            <div>
+                                                <InputLabel htmlFor="first_filled_age" value={__('Usia')} />
+                                                <TextInput
+                                                    id="first_filled_age"
+                                                    type="number"
+                                                    value={data.first_filled_age}
+                                                    onChange={(e) => setData('first_filled_age', e.target.value)}
+                                                    className="mt-1 block w-full"
+                                                />
+                                                <InputError message={errors.first_filled_age} className="mt-2" />
+                                            </div>
+                                            <div>
+                                                <InputLabel htmlFor="first_filled_education" value={__('Pendidikan')} />
+                                                <TextInput
+                                                    id="first_filled_education"
+                                                    value={data.first_filled_education}
+                                                    onChange={(e) => setData('first_filled_education', e.target.value)}
+                                                    className="mt-1 block w-full"
+                                                />
+                                                <InputError message={errors.first_filled_education} className="mt-2" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+                                        <SecondaryButton onClick={cancelEdit} disabled={processing}>
+                                            {__('Batal')}
+                                        </SecondaryButton>
+                                        <PrimaryButton disabled={processing} className={processing ? 'opacity-75 cursor-wait' : ''}>
+                                            {processing && (
+                                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                            )}
+                                            {__('Simpan Perubahan')}
+                                        </PrimaryButton>
+                                    </div>
+                                </form>
+                            ) : (
+                                <div className="space-y-8 animate-fade-in">
+                                    {/* View Mode */}
+                                    
+                                    <div className="flex flex-col md:flex-row gap-8 items-start">
+                                        {/* Profile Photo Display */}
+                                        <div className="flex-shrink-0 w-full md:w-auto flex justify-center">
+                                            <div className="relative w-40 h-40">
+                                                <img 
+                                                    src={user.profile_photo_url || 'https://ui-avatars.com/api/?name=' + user.name} 
+                                                    alt="Profile" 
+                                                    className="w-full h-full rounded-full object-cover border-4 border-gray-200 dark:border-gray-700 shadow-md"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Details Grid */}
+                                        <div className="flex-grow w-full grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+                                            <div className="col-span-1 md:col-span-2 pb-2 mb-2 border-b border-gray-200 dark:border-gray-700">
+                                                <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{__('Informasi Pribadi')}</h4>
+                                            </div>
+
+                                            <InfoRow label={__('Nama Lengkap')} value={`${data.first_name} ${data.last_name}`} />
+                                            <InfoRow label={__('Email')} value={data.email} />
+                                            <InfoRow label={__('Nomor Telepon')} value={data.phone_number} />
+                                            <InfoRow label={__('Jenis Kelamin')} value={data.gender === 'Male' ? __('Laki-laki') : (data.gender === 'Female' ? __('Perempuan') : '-')} />
+                                            <InfoRow label={__('Tanggal Lahir')} value={formatDate(data.date_of_birth)} />
+                                            <InfoRow label={__('Alamat')} value={data.address} />
+                                            
+                                            <div className="col-span-1 md:col-span-2 mt-4 pb-2 mb-2 border-b border-gray-200 dark:border-gray-700">
+                                                <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{__('Rencana Masa Depan')}</h4>
+                                            </div>
+
+                                            <InfoRow label={__('Tanggal Rencana Kelulusan (21 Th)')} value={dynamicGraduationDate ? formatDate(dynamicGraduationDate.toISOString()) : '-'} />
+                                            <InfoRow label={__('Pendidikan Saat Awal')} value={data.first_filled_education} />
+                                            <InfoRow label={__('Usia Saat Awal')} value={`${data.first_filled_age || '-'} Tahun`} />
+                                            <InfoRow label={__('Tanggal Pengisian Awal')} value={formatDate(data.first_filled_at)} />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {!isEditing && (
+                                <div className="flex justify-end mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                                    <Link
+                                        href={route('rmd.gods-purpose')}
+                                        className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
+                                    >
+                                        {__('Lanjut: Tujuan Tuhan Bagimu')} &raquo;
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Custom Confirmation Modal */}
+            <Modal show={modalState.show} onClose={closeModal} maxWidth="sm">
+                <div className="p-6">
+                    <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full ${modalState.type === 'success' ? 'bg-green-100' : 'bg-red-100'}`}>
+                        {modalState.type === 'success' ? (
+                            <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                        ) : (
+                            <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                            </svg>
+                        )}
+                    </div>
+                    <div className="mt-3 text-center sm:mt-5">
+                        <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100" id="modal-title">
+                            {modalState.title}
+                        </h3>
+                        <div className="mt-2">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                {modalState.message}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="mt-5 sm:mt-6">
+                        <PrimaryButton
+                            type="button"
+                            className="w-full justify-center"
+                            onClick={closeModal}
+                        >
+                            {__('Tutup')}
+                        </PrimaryButton>
+                    </div>
+                </div>
+            </Modal>
+        </AuthenticatedLayout>
+    );
+}
