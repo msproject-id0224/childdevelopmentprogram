@@ -47,6 +47,7 @@ class User extends Authenticatable
         'mentor_id',
         'profile_photo_path',
         'profile_photo_status',
+        'job_title',
     ];
 
     /**

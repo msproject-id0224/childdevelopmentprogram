@@ -1,17 +1,19 @@
 @component('mail::message')
 # Profile Photo Status Update
 
-Hello {{ \->user->name }},
+Hello {{ $user->name }},
 
-Your profile photo request has been **{{ \ }}**.
+Your profile photo request has been **{{ str_replace('_', ' ', $status) }}**.
 
-@if(\ === 'approved')
+@if($status === 'approved')
 Your new profile photo is now active.
-@elseif(\ === 'rejected')
-Reason: {{ \ }}
+@elseif($status === 'rejected')
+Reason: {{ $reason }}
+
 Please upload a new photo that follows our guidelines.
-@elseif(\ === 're-upload requested')
-Reason: {{ \ }}
+@elseif($status === 'reupload_requested')
+Reason: {{ $reason }}
+
 Please upload a new photo as requested by the administrator.
 @endif
 

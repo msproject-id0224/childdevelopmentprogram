@@ -104,7 +104,22 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::post('/admin/profile-photos/upload/{user}', [ProfilePhotoController::class, 'adminUpload'])->name('admin.profile-photos.upload');
     Route::post('/admin/profile-photos/approve/{photoRequest}', [ProfilePhotoController::class, 'approve'])->name('admin.profile-photos.approve');
     Route::post('/admin/profile-photos/reject/{photoRequest}', [ProfilePhotoController::class, 'reject'])->name('admin.profile-photos.reject');
-    Route::post('/admin/profile-photos/bulk', [ProfilePhotoController::class, 'bulkUpload'])->name('admin.profile-photos.bulk');
+    Route::post('/admin/profile-photos/request-reupload/{photoRequest}', [ProfilePhotoController::class, 'requestReupload'])->name('admin.profile-photos.request-reupload');
+    Route::post('/admin/profile-photos/bulk-approve', [ProfilePhotoController::class, 'bulkApprove'])->name('admin.profile-photos.bulk-approve');
+    Route::post('/admin/profile-photos/bulk-reject', [ProfilePhotoController::class, 'bulkReject'])->name('admin.profile-photos.bulk-reject');
+    Route::get('/admin/profile-photos/export', [ProfilePhotoController::class, 'export'])->name('admin.profile-photos.export');
+    Route::post('/admin/profile-photos/bulk-upload', [ProfilePhotoController::class, 'bulkUpload'])->name('admin.profile-photos.bulk-upload-csv');
+
+    // Admin Schedule Messages API
+    Route::get('/api/admin/schedule-messages/unread', [ScheduleMessageController::class, 'getUnreadMessages'])->name('api.admin.schedule-messages.unread');
+    Route::patch('/api/admin/schedule-messages/{message}/read', [ScheduleMessageController::class, 'markAsRead'])->name('api.admin.schedule-messages.read');
+    Route::patch('/api/admin/schedule-messages/{message}/archive', [ScheduleMessageController::class, 'archive'])->name('api.admin.schedule-messages.archive');
+
+    // Admin Management Routes
+    Route::get('/api/admins', [App\Http\Controllers\AdminController::class, 'index'])->name('api.admins.index');
+    Route::patch('/api/admins/{user}', [App\Http\Controllers\AdminController::class, 'update'])->name('api.admins.update');
+    Route::delete('/api/admins/{user}', [App\Http\Controllers\AdminController::class, 'destroy'])->name('api.admins.destroy');
+    Route::patch('/api/admins/{user}/toggle-status', [App\Http\Controllers\AdminController::class, 'toggleStatus'])->name('api.admins.toggle-status');
 });
 
 Route::middleware(['auth', 'verified', 'role:admin,mentor'])->group(function () {

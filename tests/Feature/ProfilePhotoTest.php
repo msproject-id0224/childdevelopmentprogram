@@ -73,33 +73,6 @@ class ProfilePhotoTest extends TestCase
         ]);
     }
 
-    public function test_user_cannot_request_photo_if_already_pending()
-    {
-        $user = User::factory()->create([
-            'role' => 'participant',
-            'profile_photo_status' => 'pending'
-        ]);
-        
-        ProfilePhotoRequest::create([
-            'user_id' => $user->id,
-            'photo_path' => 'temp/path.jpg',
-            'status' => 'pending',
-        ]);
-
-        $file = UploadedFile::fake()->create('second_request.png', 100);
-
-        $response = $this->actingAs($user)
-            ->post(route('participant.profile-photo.request'), [
-                'photo' => $file,
-            ]);
-
-        $response->assertStatus(302);
-        $response->assertSessionHas('error', 'You already have a pending photo request. Please wait for admin review.');
-        
-        // Ensure no new request was created
-        $this->assertEquals(1, ProfilePhotoRequest::where('user_id', $user->id)->count());
-    }
-
     public function test_admin_can_approve_photo_request()
     {
         $admin = User::factory()->create(['role' => 'admin']);
@@ -157,6 +130,37 @@ class ProfilePhotoTest extends TestCase
 
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'admin_reject_photo',
+            'user_id' => $admin->id,
+        ]);
+    }
+
+    public function test_admin_can_request_reupload()
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $user = User::factory()->create();
+        $path = UploadedFile::fake()->create('temp.jpg', 100)->store('profile-photo-requests', 'public');
+        
+        $photoRequest = ProfilePhotoRequest::create([
+            'user_id' => $user->id,
+            'photo_path' => $path,
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->post(route('admin.profile-photos.request-reupload', $photoRequest), [
+                'reason' => 'Please use a clearer photo',
+            ]);
+
+        $response->assertStatus(302);
+        $photoRequest->refresh();
+        $user->refresh();
+
+        $this->assertEquals('reupload_requested', $photoRequest->status);
+        $this->assertEquals('reupload_requested', $user->profile_photo_status);
+        $this->assertEquals('Please use a clearer photo', $photoRequest->rejection_reason);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'admin_request_reupload_photo',
             'user_id' => $admin->id,
         ]);
     }

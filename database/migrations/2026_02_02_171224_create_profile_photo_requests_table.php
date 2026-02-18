@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('photo_path');
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->enum('status', ['pending', 'approved', 'rejected', 'reupload_requested'])->default('pending');
             $table->foreignId('reviewer_id')->nullable()->constrained('users');
             $table->text('rejection_reason')->nullable();
             $table->timestamp('reviewed_at')->nullable();

@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -9,16 +10,22 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class ProfilePhotoStatusMail extends Mailable
+class ProfilePhotoStatusMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
+
+    public $user;
+    public $status;
+    public $reason;
 
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct(User $user, string $status, ?string $reason = null)
     {
-        //
+        $this->user = $user;
+        $this->status = $status;
+        $this->reason = $reason;
     }
 
     /**
@@ -27,7 +34,7 @@ class ProfilePhotoStatusMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Profile Photo Status Mail',
+            subject: 'Profile Photo Status Update: ' . ucfirst(str_replace('_', ' ', $this->status)),
         );
     }
 
@@ -37,7 +44,7 @@ class ProfilePhotoStatusMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.name',
+            markdown: 'emails.profile-photo-status',
         );
     }
 

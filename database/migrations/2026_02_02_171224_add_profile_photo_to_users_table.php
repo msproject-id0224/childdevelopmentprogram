@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('profile_photo_path', 2048)->nullable();
-            $table->enum('profile_photo_status', ['active', 'pending', 'rejected'])->default('active');
+            $table->enum('profile_photo_status', ['active', 'pending', 'rejected', 'reupload_requested'])->default('active');
         });
     }
 

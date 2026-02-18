@@ -4,6 +4,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import DangerButton from '@/Components/DangerButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import Modal from '@/Components/Modal';
+import PhotoApprovalModal from '@/Components/PhotoApprovalModal';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
@@ -13,21 +14,32 @@ import { useState, useRef } from 'react';
 
 export default function ProfilePhotoRequests({ auth, requests }) {
     const [rejectingRequest, setRejectingRequest] = useState(null);
+    const [approvingRequest, setApprovingRequest] = useState(null);
     const [showBulkModal, setShowBulkModal] = useState(false);
     
     const { data, setData, post, processing, errors, reset } = useForm({
         reason: '',
     });
 
+    const { post: postApprove, processing: approveProcessing } = useForm({});
+
     const { data: bulkData, setData: setBulkData, post: postBulk, processing: bulkProcessing, errors: bulkErrors, reset: resetBulk } = useForm({
         csv_file: null,
         photos: [],
     });
 
-    const approve = (id) => {
-        if (confirm(__('Are you sure you want to approve this photo?'))) {
-            post(route('admin.profile-photos.approve', id));
-        }
+    const openApproveModal = (request) => {
+        setApprovingRequest(request);
+    };
+
+    const closeApproveModal = () => {
+        setApprovingRequest(null);
+    };
+
+    const confirmApprove = (request) => {
+        postApprove(route('admin.profile-photos.approve', request.id), {
+            onSuccess: () => closeApproveModal(),
+        });
     };
 
     const openRejectModal = (request) => {
@@ -48,7 +60,7 @@ export default function ProfilePhotoRequests({ auth, requests }) {
 
     const submitBulk = (e) => {
         e.preventDefault();
-        postBulk(route('admin.profile-photos.bulk'), {
+        postBulk(route('admin.profile-photos.bulk-upload-csv'), {
             forceFormData: true,
             onSuccess: () => {
                 setShowBulkModal(false);
@@ -100,16 +112,16 @@ export default function ProfilePhotoRequests({ auth, requests }) {
                                             </div>
                                             <div className="flex space-x-2 w-full">
                                                 <PrimaryButton 
-                                                    onClick={() => approve(request.id)}
+                                                    onClick={() => openApproveModal(request)}
                                                     className="flex-1 justify-center text-xs"
-                                                    disabled={processing}
+                                                    disabled={processing || approveProcessing}
                                                 >
                                                     {__('Approve')}
                                                 </PrimaryButton>
                                                 <DangerButton 
                                                     onClick={() => openRejectModal(request)}
                                                     className="flex-1 justify-center text-xs"
-                                                    disabled={processing}
+                                                    disabled={processing || approveProcessing}
                                                 >
                                                     {__('Reject')}
                                                 </DangerButton>
@@ -126,6 +138,15 @@ export default function ProfilePhotoRequests({ auth, requests }) {
                     </div>
                 </div>
             </div>
+
+            {/* Approve Modal */}
+            <PhotoApprovalModal 
+                show={!!approvingRequest}
+                request={approvingRequest}
+                onConfirm={confirmApprove}
+                onCancel={closeApproveModal}
+                processing={approveProcessing}
+            />
 
             {/* Reject Modal */}
             <Modal show={!!rejectingRequest} onClose={closeRejectModal}>
