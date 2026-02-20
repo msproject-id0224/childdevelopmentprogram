@@ -10,8 +10,8 @@ export default defineConfig({
         },
     },
     test: {
-        environment: 'jsdom',
         globals: true,
-        setupFiles: './tests/Js/setup.js',
+        environment: 'jsdom',
+        setupFiles: './resources/js/tests/setup.js',
     },
 });

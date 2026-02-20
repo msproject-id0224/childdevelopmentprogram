@@ -154,7 +154,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                                     <div className="flex-shrink-0">
                                         {user.profile_photo_path ? (
                                             <img 
-                                                src={`/storage/${user.profile_photo_path}`} 
+                                                src={user.profile_photo_url} 
                                                 alt={user.name} 
                                                 className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700" 
                                             />
@@ -246,7 +246,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                                         <InfoRow label={__('Phone Number')} value={user.phone_number} />
                                         <InfoRow label={__('Address')} value={user.address} />
                                         <InfoRow label={__('Date of Birth')} value={formatDate(user.date_of_birth)} />
-                                        <InfoRow label={__('Membership Status')} value={user.role ? __(user.role.charAt(0).toUpperCase() + user.role.slice(1)) : '-'} />
+                                        <InfoRow label={__('Membership Status')} value={user.role ? __(String(user.role).charAt(0).toUpperCase() + String(user.role).slice(1)) : '-'} />
                                     </>
                                 )}
                             </dl>

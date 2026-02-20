@@ -8,8 +8,13 @@ import PhotoRequestsTab from '@/Components/Dashboard/PhotoRequestsTab';
 
 export default function Dashboard({ auth, schedules, photoRequests }) {
     const user = auth.user;
-    const role = user?.role || 'participant';
+    const role = user?.role ? String(user.role) : 'participant';
     const [activeTab, setActiveTab] = useState('overview');
+
+    // Safe access helpers
+    const getUserName = () => user?.name || user?.first_name || 'User';
+    const getUserInitials = () => getUserName().charAt(0).toUpperCase();
+    const getRoleDisplay = () => role.charAt(0).toUpperCase() + role.slice(1);
 
     if (!user) {
         return null; // or loading spinner, though auth middleware prevents this
@@ -19,7 +24,7 @@ export default function Dashboard({ auth, schedules, photoRequests }) {
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    {__('Dashboard')} {role.charAt(0).toUpperCase() + role.slice(1)}
+                    {__('Dashboard')} {getRoleDisplay()}
                 </h2>
             }
         >
@@ -36,12 +41,12 @@ export default function Dashboard({ auth, schedules, photoRequests }) {
                                         {user.profile_photo_url ? (
                                             <img 
                                                 src={user.profile_photo_url} 
-                                                alt={user.name} 
+                                                alt={getUserName()} 
                                                 className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-gray-800 shadow-md"
                                             />
                                         ) : (
                                             <div className="w-24 h-24 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 text-2xl font-bold border-4 border-white dark:border-gray-800 shadow-md">
-                                                {user.name.charAt(0)}
+                                                {getUserInitials()}
                                             </div>
                                         )}
                                         <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white dark:border-gray-800 shadow-sm ${
@@ -51,7 +56,7 @@ export default function Dashboard({ auth, schedules, photoRequests }) {
                                     </div>
                                     
                                     <div className="flex-1 text-center md:text-left">
-                                        <h4 className="text-lg font-semibold">{user.name}</h4>
+                                        <h4 className="text-lg font-semibold">{getUserName()}</h4>
                                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{user.email}</p>
                                         <div className="flex flex-wrap justify-center md:justify-start gap-2">
                                             <span className={`px-2 py-0.5 text-xs rounded-full ${

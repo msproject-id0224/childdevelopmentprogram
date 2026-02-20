@@ -51,11 +51,31 @@ class User extends Authenticatable
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        'profile_photo_url',
+        'name',
+    ];
+
+    /**
      * Set the user's email (lowercase and trim).
      */
     public function setEmailAttribute($value)
     {
         $this->attributes['email'] = strtolower(trim($value));
+    }
+
+    /**
+     * Get the user's profile photo URL.
+     */
+    public function getProfilePhotoUrlAttribute()
+    {
+        return $this->profile_photo_path
+            ? '/storage/' . str_replace('\\', '/', $this->profile_photo_path)
+            : null;
     }
 
     /**
@@ -100,20 +120,7 @@ class User extends Authenticatable
         return $parts[0];
     }
     
-    /**
-     * Append the name attribute to the model's array form.
-     */
-    protected $appends = ['name', 'first_name_display', 'profile_photo_url'];
 
-    /**
-     * Get the profile photo URL.
-     */
-    public function getProfilePhotoUrlAttribute(): ?string
-    {
-        return $this->profile_photo_path 
-            ? asset('storage/' . $this->profile_photo_path) 
-            : null;
-    }
 
     public function rmdProfile(): HasOne
     {
@@ -200,7 +207,9 @@ class User extends Authenticatable
             return true;
         }
 
-        return $this->age >= self::MINIMUM_PARTICIPANT_AGE;
+        // Allow login if age is not set (null), so user can update profile later.
+        // Only block if age is explicitly set and below minimum.
+        return is_null($this->age) || $this->age >= self::MINIMUM_PARTICIPANT_AGE;
     }
 
     /**

@@ -260,12 +260,12 @@ export default function MentorScheduleTable() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(schedule.priority)}`}>
-                                            {schedule.priority ? schedule.priority.charAt(0).toUpperCase() + schedule.priority.slice(1) : '-'}
+                                            {schedule.priority ? String(schedule.priority).charAt(0).toUpperCase() + String(schedule.priority).slice(1) : '-'}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(schedule.status)}`}>
-                                            {schedule.status ? schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1) : 'Scheduled'}
+                                            {schedule.status ? String(schedule.status).charAt(0).toUpperCase() + String(schedule.status).slice(1) : 'Scheduled'}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">

@@ -152,6 +152,7 @@ class OtpController extends Controller
 
                 // Age restriction check
                 if (method_exists($user, 'meetsAgeRequirement') && !$user->meetsAgeRequirement()) {
+                    Log::warning("Login blocked: Underage user", ['email' => $email, 'age' => $user->age]);
                     AuditLog::create([
                         'user_id' => $user->id,
                         'action' => 'LOGIN_BLOCKED_UNDERAGE',

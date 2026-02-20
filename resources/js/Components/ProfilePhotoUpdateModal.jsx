@@ -87,7 +87,7 @@ export default function ProfilePhotoUpdateModal({ show, onClose }) {
                                 <img src={user.profile_photo_url} alt="Current Photo" className="w-full h-full object-cover" />
                             ) : (
                                 <div className="w-full h-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 text-4xl font-bold">
-                                    {user.name.charAt(0)}
+                                    {(user.name || user.first_name || 'U').charAt(0)}
                                 </div>
                             )}
                         </div>

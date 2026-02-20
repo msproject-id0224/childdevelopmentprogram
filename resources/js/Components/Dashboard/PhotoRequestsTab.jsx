@@ -23,10 +23,14 @@ export default function PhotoRequestsTab({ initialRequests }) {
         reason: '',
     });
 
-    const filteredRequests = requests.filter(request => 
-        request.user.name.toLowerCase().includes(search.toLowerCase()) ||
-        request.user.email.toLowerCase().includes(search.toLowerCase())
-    );
+    const filteredRequests = requests.filter(request => {
+        const userName = request.user?.name || request.user?.first_name || '';
+        const userEmail = request.user?.email || '';
+        const searchTerm = search.toLowerCase();
+        
+        return userName.toLowerCase().includes(searchTerm) ||
+               userEmail.toLowerCase().includes(searchTerm);
+    });
 
     const approve = (id) => {
         if (confirm(__('Are you sure you want to approve this photo?'))) {
@@ -92,21 +96,21 @@ export default function PhotoRequestsTab({ initialRequests }) {
                         <div key={request.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex flex-col items-center shadow-sm hover:shadow-md transition-shadow">
                             <div className="mb-4 relative group">
                                 <img 
-                                    src={`/storage/${request.photo_path}`} 
-                                    alt={request.user.name} 
+                                    src={request.photo_url} 
+                                    alt={request.user?.name || request.user?.first_name || 'User'} 
                                     className="w-32 h-32 rounded-full object-cover border-4 border-gray-100 dark:border-gray-700 group-hover:border-indigo-100 dark:group-hover:border-indigo-900 transition-colors"
                                 />
                                 <div className="absolute inset-0 rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity"></div>
                             </div>
                             <div className="text-center mb-4 flex-1">
-                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">{request.user.name}</h4>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">{request.user.email}</p>
+                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">{request.user?.name || request.user?.first_name || 'User'}</h4>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{request.user?.email}</p>
                                 <span className={`inline-block mt-2 px-2 py-0.5 text-[10px] rounded-full capitalize ${
-                                    request.user.role === 'mentor' 
+                                    request.user?.role === 'mentor' 
                                         ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
                                         : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
                                 }`}>
-                                    {__(request.user.role)}
+                                    {__(request.user?.role || 'participant')}
                                 </span>
                                 <p className="text-[10px] text-gray-400 mt-2">
                                     {new Date(request.created_at).toLocaleDateString()}
@@ -141,7 +145,7 @@ export default function PhotoRequestsTab({ initialRequests }) {
                     </h2>
 
                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                        {__('Please provide a reason for rejecting the photo for :name', { name: rejectingRequest?.user.name })}
+                        {__('Please provide a reason for rejecting the photo for :name', { name: rejectingRequest?.user?.name || rejectingRequest?.user?.first_name || 'User' })}
                     </p>
 
                     <div className="mt-6">
