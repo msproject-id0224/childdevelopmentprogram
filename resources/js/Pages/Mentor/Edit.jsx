@@ -74,7 +74,7 @@ export default function MentorEdit({ auth, mentor }) {
                                 <div className="flex-shrink-0">
                                     {mentor.profile_photo_path ? (
                                         <img 
-                                            src={`/storage/${mentor.profile_photo_path}`} 
+                                            src={mentor.profile_photo_url} 
                                             alt={mentor.name} 
                                             className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700" 
                                         />

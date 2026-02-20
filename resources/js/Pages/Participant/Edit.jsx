@@ -75,7 +75,7 @@ export default function ParticipantEdit({ auth, participant }) {
                                 <div className="flex-shrink-0">
                                     {participant.profile_photo_path ? (
                                         <img 
-                                            src={`/storage/${participant.profile_photo_path}`} 
+                                            src={participant.profile_photo_url} 
                                             alt={participant.name} 
                                             className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700" 
                                         />

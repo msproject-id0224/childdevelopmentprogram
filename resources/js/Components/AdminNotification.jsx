@@ -10,9 +10,14 @@ export default function AdminNotificationComponent() {
 
     const fetchMessages = async () => {
         try {
-            const response = await window.axios.get(route('api.admin.schedule-messages.unread'));
-            setMessages(response.data);
-            updateTotalCount(response.data, photoRequests);
+            const [messagesRes, photosRes] = await Promise.all([
+                window.axios.get(route('api.admin.schedule-messages.unread')),
+                window.axios.get(route('api.admin.profile-photos.pending'))
+            ]);
+            
+            setMessages(messagesRes.data);
+            setPhotoRequests(photosRes.data);
+            updateTotalCount(messagesRes.data, photosRes.data);
         } catch (error) {
             console.error('Failed to fetch notifications', error);
         }

@@ -109,6 +109,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::post('/admin/profile-photos/bulk-reject', [ProfilePhotoController::class, 'bulkReject'])->name('admin.profile-photos.bulk-reject');
     Route::get('/admin/profile-photos/export', [ProfilePhotoController::class, 'export'])->name('admin.profile-photos.export');
     Route::post('/admin/profile-photos/bulk-upload', [ProfilePhotoController::class, 'bulkUpload'])->name('admin.profile-photos.bulk-upload-csv');
+    Route::get('/api/admin/profile-photos/pending', [ProfilePhotoController::class, 'pending'])->name('api.admin.profile-photos.pending');
 
     // Admin Schedule Messages API
     Route::get('/api/admin/schedule-messages/unread', [ScheduleMessageController::class, 'getUnreadMessages'])->name('api.admin.schedule-messages.unread');

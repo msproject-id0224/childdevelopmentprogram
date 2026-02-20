@@ -122,6 +122,19 @@ class ProfilePhotoController extends Controller
     }
 
     /**
+     * API: Get pending photo requests for admin notifications.
+     */
+    public function pending()
+    {
+        $requests = ProfilePhotoRequest::with('user')
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
+            
+        return response()->json($requests);
+    }
+
+    /**
      * Admin: List requests with filtering and pagination.
      */
     public function index(Request $request)
