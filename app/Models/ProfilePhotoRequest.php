@@ -16,9 +16,16 @@ class ProfilePhotoRequest extends Model
         'reviewed_at',
     ];
 
+    protected $appends = ['photo_url'];
+
     protected $casts = [
         'reviewed_at' => 'datetime',
     ];
+
+    public function getPhotoUrlAttribute()
+    {
+        return $this->photo_path ? '/storage/' . str_replace('\\', '/', $this->photo_path) : null;
+    }
 
     public function user(): BelongsTo
     {

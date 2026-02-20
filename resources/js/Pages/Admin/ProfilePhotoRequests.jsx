@@ -100,7 +100,7 @@ export default function ProfilePhotoRequests({ auth, requests }) {
                                         <div key={request.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex flex-col items-center">
                                             <div className="mb-4">
                                                 <img 
-                                                    src={`/storage/${request.photo_path}`} 
+                                                    src={request.photo_url} 
                                                     alt={request.user.name} 
                                                     className="w-32 h-32 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
                                                 />

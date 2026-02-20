@@ -26,7 +26,7 @@ export default function PhotoApprovalModal({
                 <div className="flex flex-col items-center mb-6">
                     <div className="mb-4 relative group">
                         <img 
-                            src={`/storage/${request.photo_path}`} 
+                            src={request.photo_url} 
                             alt={request.user.name} 
                             className="w-32 h-32 rounded-full object-cover border-4 border-gray-100 dark:border-gray-700 shadow-lg transition-transform transform group-hover:scale-105 duration-300"
                         />
